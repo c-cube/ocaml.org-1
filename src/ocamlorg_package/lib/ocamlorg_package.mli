@@ -193,3 +193,14 @@ val search : ?sort_by_popularity:bool -> state -> string -> t list
 
 val featured : state -> t list option
 (** A list of packages to highlight on the Packages page. *)
+
+module Build : sig
+  type ocamlorg_package := t
+  type t = Build.Status.t
+
+  val to_string : t -> string
+
+  val find : state -> ocamlorg_package -> (string * t) list
+  (** Returns the list of versions of the compiler known to have succesfully
+      built the package specified by name and version *)
+end

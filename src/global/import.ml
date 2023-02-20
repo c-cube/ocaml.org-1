@@ -95,6 +95,12 @@ end = struct
   let to_list (_, elts) = elts
 end
 
+module Option = struct
+  include Stdlib.Option
+
+  let filter p = function Some x when p x -> Some x | opt -> opt
+end
+
 module Result = struct
   include Stdlib.Result
 

@@ -1,6 +1,12 @@
 (library
  (name ocamlorg_frontend)
- (libraries ocamlorg.global dream ocamlorg.data timedesc ocamlorg_static))
+ (libraries
+  ocamlorg.global
+  dream
+  ocamlorg.data
+  timedesc
+  ocamlorg_static
+  ocamlorg_package))
 
 (include_subdirs unqualified)
 

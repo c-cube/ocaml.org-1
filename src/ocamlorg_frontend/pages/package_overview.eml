@@ -156,6 +156,7 @@ let render
 ~content_title
 ~toc
 ~(deps_and_conflicts: dependencies_and_conflicts list)
+~build_status
 (package : Package.package) =
 let render_dependency ~name ~cstr ~version =
   <li class="flex m-0 space-x-3 py-2 px-4 hover:bg-gray-100">
@@ -228,6 +229,14 @@ Package_layout.render
         <div class="flex-grow"></div>
         <h2 class="font-semibold text-base text-body-400">Published:
           <span class="font-normal"><%s Utils.human_date_of_timestamp package.publication %></span>
+        </h2>
+      </div>
+
+      <div>
+        <h2 class="font-semibold text-base text-body-400">Last Built Using:
+          <span class="font-normal">
+              <%s match build_status with [] -> "Unknown" | (v, s) :: _ -> Printf.sprintf "Ocaml %s: %s " v (Ocamlorg_package.Build.to_string s) %>
+          </span>
         </h2>
       </div>
 
