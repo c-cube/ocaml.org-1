@@ -47,6 +47,7 @@ let last_commit () =
   let+ output =
     Process.pread (git_cmd [ "rev-parse"; "HEAD" ]) |> Lwt.map String.trim
   in
+  Logs.info (fun m -> m "Opam repo: commit %s" output);
   output
 
 let clone () =
@@ -61,6 +62,7 @@ let clone () =
           Fpath.to_string clone_path;
         |] )
   in
+  Logs.info (fun m -> m "Opam repo: git clone");
   last_commit ()
 
 let pull () =
@@ -68,6 +70,7 @@ let pull () =
   let* () =
     Process.exec (git_cmd [ "pull"; "-q"; "--ff-only"; "origin"; "master" ])
   in
+  Logs.info (fun m -> m "Opam repo: git pull");
   last_commit ()
 
 let fold_dir f acc directory =

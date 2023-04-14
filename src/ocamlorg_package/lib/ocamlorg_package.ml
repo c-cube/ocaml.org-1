@@ -123,7 +123,7 @@ let get_latest' packages name =
 
 let update_repo ~commit t =
   let open Lwt.Syntax in
-  Logs.info (fun m -> m "Opam repo: commit %s" commit);
+  Logs.info (fun m -> m "Opam repo: Update");
   t.opam_repository_commit <- Some commit;
   Logs.info (fun m -> m "Opam repo: Updating opam package list");
   Logs.info (fun f -> f "Opam repo: Calculating packages.. .");
@@ -144,6 +144,7 @@ let update_repo ~commit t =
   save_state t
 
 let update_build_status (data, digest) t =
+  Logs.info (fun m -> m "Opam build status: Update");
   let json = Yojson.Safe.from_string data in
   let build_status = Build.Json.of_string json in
   Result.iter_error
@@ -183,7 +184,6 @@ let maybe_update_repo state =
   let open Lwt.Syntax in
   let* commit = Opam_repository.(if exists () then pull else clone) () in
   let|? commit = Option.filter (( <> ) commit) state.opam_repository_commit in
-  Logs.info (fun m -> m "Opam repo: Update");
   update_repo ~commit state
 
 let maybe_update_build_status state =
@@ -192,7 +192,6 @@ let maybe_update_build_status state =
   let|? data = Result.to_option data in
   let digest = (fun s -> s |> String.to_bytes |> Digest.bytes) data in
   let|? digest = Option.filter (( <> ) digest) state.build_status_digest in
-  Logs.info (fun m -> m "Opam build status: Update");
   update_build_status (data, digest) state
 
 let thread state =
