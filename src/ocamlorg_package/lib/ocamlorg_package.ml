@@ -625,7 +625,7 @@ let search ?(sort_by_popularity = false) t query =
 module Build = struct
   type t = Build.Status.t
 
-  let to_string = Build.Status.to_string
+  let to_string = Build.to_string
 
   let find t package =
     let name = Name.to_string package.name in

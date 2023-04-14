@@ -1,3 +1,5 @@
+open Ocamlorg.Import
+
 let side_box_link ~href ~title ~icon_html =
     <a href="<%s href %>" class="flex items-center py-2 px-4 hover:text-primary-600">
         <%s! icon_html %>
@@ -230,12 +232,10 @@ Package_layout.render
         <h2 class="font-semibold text-base text-body-400">Published:
           <span class="font-normal"><%s Utils.human_date_of_timestamp package.publication %></span>
         </h2>
-      </div>
-
-      <div>
-        <h2 class="font-semibold text-base text-body-400">Last Built Using:
+        <div class="flex-grow"></div>
+        <h2 class="font-semibold text-base text-body-400">Freshest Build:
           <span class="font-normal">
-              <%s match build_status with [] -> "Unknown" | (v, s) :: _ -> Printf.sprintf "Ocaml %s: %s " v (Ocamlorg_package.Build.to_string s) %>
+              <%s build_status |> List.sort (fun x y -> compare (snd y) (snd x)) |> List.hd_opt |> Option.fold ~none:"None known" ~some:Ocamlorg_package.Build.to_string %>
           </span>
         </h2>
       </div>

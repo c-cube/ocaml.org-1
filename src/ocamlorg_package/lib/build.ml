@@ -14,12 +14,16 @@ module Status = struct
     | str -> error "status" str
 
   let to_string = function
-    | Bad -> "Build error"
+    | Bad -> "Error"
     | Internal_failure -> "CI not available"
     | Not_available -> "No information"
     | Partial -> "Partial"
-    | Good -> "Success"
+    | Good -> "OCaml"
 end
+
+let to_string ((v : string), (s : Status.t)) = match s with
+| Status.Good -> "OCaml " ^ v
+| s -> Status.to_string s
 
 let ( let* ) = Result.bind
 let ( <@> ) f = Result.fold ~ok:Result.map ~error:(fun e _ -> Error e) f
@@ -48,4 +52,5 @@ module Json = struct
   let of_string json =
     let of_list u = u |> List.to_seq |> String.Map.of_seq in
     json |> to_repo |> Result.map of_list
+
 end

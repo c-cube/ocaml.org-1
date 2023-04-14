@@ -198,7 +198,7 @@ module Build : sig
   type ocamlorg_package := t
   type t = Build.Status.t
 
-  val to_string : t -> string
+  val to_string : string * t -> string
 
   val find : state -> ocamlorg_package -> (string * t) list
   (** Returns the list of versions of the compiler known to have succesfully
