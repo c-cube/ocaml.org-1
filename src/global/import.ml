@@ -100,7 +100,7 @@ end
 module Option = struct
   include Stdlib.Option
 
-  let filter p = function Some x when p x -> Some x | opt -> opt
+  let filter p = function Some x when p x -> Some x | _ -> None
 end
 
 module Result = struct
