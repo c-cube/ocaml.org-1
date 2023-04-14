@@ -125,8 +125,7 @@ let update_repo ~commit t =
   let open Lwt.Syntax in
   Logs.info (fun m -> m "Opam repo: Update");
   t.opam_repository_commit <- Some commit;
-  Logs.info (fun m -> m "Opam repo: Updating opam package list");
-  Logs.info (fun f -> f "Opam repo: Calculating packages.. .");
+  Logs.info (fun f -> f "Opam repo: Calculating packages...");
   let* packages = read_packages () in
   Logs.info (fun f -> f "Opam repo: Computing additional informations...");
   let* packages = Info.of_opamfiles packages in
@@ -183,7 +182,7 @@ let ( let|? ) opt f = Option.fold ~none:(Lwt.return ()) ~some:f opt
 let maybe_update_repo state =
   let open Lwt.Syntax in
   let* commit = Opam_repository.(if exists () then pull else clone) () in
-  let|? commit = Option.filter (( <> ) commit) state.opam_repository_commit in
+  let|? _ = Option.filter (( <> ) commit) state.opam_repository_commit in
   update_repo ~commit state
 
 let maybe_update_build_status state =
@@ -191,22 +190,22 @@ let maybe_update_build_status state =
   let* data = http_get Config.build_status_url in
   let|? data = Result.to_option data in
   let digest = (fun s -> s |> String.to_bytes |> Digest.bytes) data in
-  let|? digest = Option.filter (( <> ) digest) state.build_status_digest in
+  let|? _ = Option.filter (( <> ) digest) state.build_status_digest in
   update_build_status (data, digest) state
 
 let thread state =
-  Lwt.both (maybe_update_repo state) (maybe_update_build_status state)
+  Lwt.bind (maybe_update_repo state) (fun _ -> maybe_update_build_status state)
 
 let rec poll_for_opam_packages ~polling v =
   let open Lwt.Syntax in
   let* () = Lwt_unix.sleep (float_of_int polling) in
-  let* (), () =
+  let* () =
     Lwt.catch
       (fun () -> thread v)
       (fun exn ->
         Logs.err (fun m ->
             m "Opam polling failure: %s" (Printexc.to_string exn));
-        Lwt.return ((), ()))
+        Lwt.return ())
   in
   poll_for_opam_packages ~polling v
 
@@ -214,7 +213,7 @@ let init ?(disable_polling = false) () =
   let open Lwt.Syntax in
   let state = try_load_state () in
   Lwt.async (fun () ->
-      let* (), () = thread state in
+      let* () = thread state in
       if disable_polling then Lwt.return_unit
       else poll_for_opam_packages ~polling:Config.opam_polling state);
   state
