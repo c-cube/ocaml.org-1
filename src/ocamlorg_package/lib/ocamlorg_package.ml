@@ -193,19 +193,19 @@ let maybe_update_build_status state =
   let|? _ = Option.filter (( <> ) digest) state.build_status_digest in
   update_build_status (data, digest) state
 
-let thread state =
-  Lwt.bind (maybe_update_repo state) (fun _ -> maybe_update_build_status state)
+let threads state =
+  Lwt.both (maybe_update_repo state) (maybe_update_build_status state)
 
 let rec poll_for_opam_packages ~polling v =
   let open Lwt.Syntax in
   let* () = Lwt_unix.sleep (float_of_int polling) in
-  let* () =
+  let* (), () =
     Lwt.catch
-      (fun () -> thread v)
+      (fun () -> threads v)
       (fun exn ->
         Logs.err (fun m ->
             m "Opam polling failure: %s" (Printexc.to_string exn));
-        Lwt.return ())
+        Lwt.return ((), ()))
   in
   poll_for_opam_packages ~polling v
 
@@ -213,7 +213,7 @@ let init ?(disable_polling = false) () =
   let open Lwt.Syntax in
   let state = try_load_state () in
   Lwt.async (fun () ->
-      let* () = thread state in
+      let* (), () = threads state in
       if disable_polling then Lwt.return_unit
       else poll_for_opam_packages ~polling:Config.opam_polling state);
   state
