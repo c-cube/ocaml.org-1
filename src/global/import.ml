@@ -61,7 +61,6 @@ module List = struct
     | hd :: tl -> hd :: take (n - 1) tl
 
   let rec drop i = function _ :: u when i > 0 -> drop (i - 1) u | u -> u
-
   let hd_opt u = try Some (hd u) with Failure _ -> None
 end
 
