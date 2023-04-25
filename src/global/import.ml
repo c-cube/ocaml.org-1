@@ -100,6 +100,10 @@ module Option = struct
   include Stdlib.Option
 
   let filter p = function Some x when p x -> Some x | _ -> None
+
+  let update_with x =
+    let none = Some x in
+    fold ~none ~some:(fun prev -> filter (( <> ) prev) none)
 end
 
 module Result = struct

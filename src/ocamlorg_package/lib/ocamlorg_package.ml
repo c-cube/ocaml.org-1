@@ -121,7 +121,7 @@ let get_latest' packages name =
          in
          { version; info; name })
 
-let update_repo ~commit t =
+let update_repo commit t =
   let open Lwt.Syntax in
   Logs.info (fun m -> m "Opam repo: Update");
   t.opam_repository_commit <- Some commit;
@@ -177,35 +177,37 @@ let http_get url =
       let+ () = Cohttp_lwt.Body.drain_body body in
       Error (`Msg "Failed to fetch the documentation page")
 
-let ( let|? ) opt f = Option.fold ~none:(Lwt.return ()) ~some:f opt
+let ( let>& ) opt some = Option.fold ~none:(Lwt.return ()) ~some opt
 
 let maybe_update_repo state =
   let open Lwt.Syntax in
   let* commit = Opam_repository.(if exists () then pull else clone) () in
-  let|? _ = Option.filter (( <> ) commit) state.opam_repository_commit in
-  update_repo ~commit state
+  let>& commit = Option.update_with commit state.opam_repository_commit in
+  update_repo commit state
 
 let maybe_update_build_status state =
   let open Lwt.Syntax in
   let* data = http_get Config.build_status_url in
-  let|? data = Result.to_option data in
-  let digest = (fun s -> s |> String.to_bytes |> Digest.bytes) data in
-  let|? _ = Option.filter (( <> ) digest) state.build_status_digest in
+  let>& data = Result.to_option data in
+  let digest = data |> String.to_bytes |> Digest.bytes in
+  let>& digest = Option.update_with digest state.build_status_digest in
   update_build_status (data, digest) state
 
 let threads state =
-  Lwt.both (maybe_update_repo state) (maybe_update_build_status state)
+  let open Lwt.Syntax in
+  let* (), () = Lwt.both (maybe_update_repo state) (maybe_update_build_status state) in 
+  Lwt.return ()
 
 let rec poll_for_opam_packages ~polling v =
   let open Lwt.Syntax in
   let* () = Lwt_unix.sleep (float_of_int polling) in
-  let* (), () =
+  let* () =
     Lwt.catch
       (fun () -> threads v)
       (fun exn ->
         Logs.err (fun m ->
             m "Opam polling failure: %s" (Printexc.to_string exn));
-        Lwt.return ((), ()))
+        Lwt.return ())
   in
   poll_for_opam_packages ~polling v
 
@@ -213,7 +215,7 @@ let init ?(disable_polling = false) () =
   let open Lwt.Syntax in
   let state = try_load_state () in
   Lwt.async (fun () ->
-      let* (), () = threads state in
+      let* () = threads state in
       if disable_polling then Lwt.return_unit
       else poll_for_opam_packages ~polling:Config.opam_polling state);
   state
