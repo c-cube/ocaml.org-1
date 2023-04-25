@@ -195,7 +195,9 @@ let maybe_update_build_status state =
 
 let threads state =
   let open Lwt.Syntax in
-  let* (), () = Lwt.both (maybe_update_repo state) (maybe_update_build_status state) in 
+  let* (), () =
+    Lwt.both (maybe_update_repo state) (maybe_update_build_status state)
+  in
   Lwt.return ()
 
 let rec poll_for_opam_packages ~polling v =
