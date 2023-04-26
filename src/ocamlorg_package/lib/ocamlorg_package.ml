@@ -140,7 +140,8 @@ let update_repo commit t =
   t.featured <- Some featured;
   Logs.info (fun m ->
       m "Opam repo: Loaded %d packages" (Name.Map.cardinal packages));
-  save_state t
+  ()
+
 
 let update_build_status (data, digest) t =
   Logs.info (fun m -> m "Opam build status: Update");
@@ -154,7 +155,7 @@ let update_build_status (data, digest) t =
   Logs.info (fun m ->
       m "Opam build status: Loaded %d build results"
         (String.Map.cardinal t.build_status));
-  Lwt.return (save_state t)
+  Lwt.return ()
 
 let http_get url =
   let open Lwt.Syntax in
@@ -198,7 +199,7 @@ let threads state =
   let* (), () =
     Lwt.both (maybe_update_repo state) (maybe_update_build_status state)
   in
-  Lwt.return ()
+  Lwt.return (save_state state)
 
 let rec poll_for_opam_packages ~polling v =
   let open Lwt.Syntax in
