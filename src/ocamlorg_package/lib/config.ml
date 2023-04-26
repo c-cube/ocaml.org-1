@@ -7,9 +7,9 @@ let documentation_url =
   Sys.getenv_opt "OCAMLORG_DOC_URL"
   |> Option.value ~default:"https://docs-data.ocaml.org/live/"
 
-let build_status_url =
+let build_check_url =
   Sys.getenv_opt "OCAMLORG_BUILD_STATUS_URL"
-  |> Option.value ~default:"http://check.ocamllabs.io/api/v1/latest/packages"
+  |> Option.value ~default:"https://check.ci.ocaml.org/api/v1/latest/packages"
 
 let default_cache_dir =
   match Sys.os_type with

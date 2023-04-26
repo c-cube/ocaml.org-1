@@ -566,10 +566,10 @@ let package_overview t kind req =
                   children = [];
                 }))
   in
-  let build_status = Ocamlorg_package.Build.find t package in
+  let build_check = Ocamlorg_package.Build.find t package in
   Dream.html
     (Ocamlorg_frontend.package_overview ~sidebar_data ~content:""
-       ~content_title:None ~toc ~deps_and_conflicts ~build_status
+       ~content_title:None ~toc ~deps_and_conflicts ~build_check
        frontend_package)
 
 let package_documentation t kind req =
@@ -699,12 +699,12 @@ let package_file t kind req =
 
   let* maybe_doc = Ocamlorg_package.file ~kind package path in
   let</>? doc = maybe_doc in
-  let build_status = Ocamlorg_package.Build.find t package in
+  let build_check = Ocamlorg_package.Build.find t package in
   let content = doc.content in
   let toc = Package_helper.frontend_toc doc.toc in
   Dream.html
     (Ocamlorg_frontend.package_overview ~sidebar_data ~content
-       ~content_title:(Some path) ~toc ~deps_and_conflicts:[] ~build_status
+       ~content_title:(Some path) ~toc ~deps_and_conflicts:[] ~build_check
        frontend_package)
 
 let sitemap _request =

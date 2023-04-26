@@ -47,7 +47,6 @@ let last_commit () =
   let+ output =
     Process.pread (git_cmd [ "rev-parse"; "HEAD" ]) |> Lwt.map String.trim
   in
-  Logs.info (fun m -> m "commit %s" output);
   output
 
 let clone () =

@@ -17,8 +17,8 @@ type state = {
   mutable packages : Info.t Version.Map.t Name.Map.t;
   mutable stats : Statistics.t option;
   mutable featured : t list option;
-  mutable build_status_digest : Digest.t option;
-  mutable build_status : (string * Build.Status.t) list String.Map.t;
+  mutable build_check_digest : Digest.t option;
+  mutable build_check : (string * Build.Status.t) list String.Map.t;
 }
 
 let mockup_state (pkgs : t list) =
@@ -38,8 +38,8 @@ let mockup_state (pkgs : t list) =
     opam_repository_commit = None;
     stats = None;
     featured = None;
-    build_status_digest = None;
-    build_status = String.Map.empty;
+    build_check_digest = None;
+    build_check = String.Map.empty;
   }
 
 let read_versions package_name versions =
@@ -87,7 +87,7 @@ let try_load_state () =
                build results)"
               (Name.Map.cardinal v.packages)
               (Option.value ~default:"" v.opam_repository_commit)
-              (String.Map.cardinal v.build_status));
+              (String.Map.cardinal v.build_check));
         v)
       ~finally:(fun () -> close_in channel)
   with Failure _ | Sys_error _ | Invalid_version | End_of_file ->
@@ -98,8 +98,8 @@ let try_load_state () =
       packages = Name.Map.empty;
       stats = None;
       featured = None;
-      build_status_digest = None;
-      build_status = String.Map.empty;
+      build_check_digest = None;
+      build_check = String.Map.empty;
     }
 
 let save_state t =
@@ -145,18 +145,18 @@ let update_repo commit t =
       m "Opam repo: Loaded %d packages" (Name.Map.cardinal packages));
   true
 
-let update_build_status (data, digest) t =
-  Logs.info (fun m -> m "Opam check: Update");
+let update_build_check (data, digest) t =
+  Logs.info (fun m -> m "Build check: Update");
   let json = Yojson.Safe.from_string data in
-  let build_status = Build.Json.of_string json in
+  let build_check = Build.Json.of_string json in
   Result.iter_error
     (fun (`Msg error) -> Logs.err (fun m -> m "%s" error))
-    build_status;
-  t.build_status_digest <- Some digest;
-  t.build_status <- Result.value ~default:t.build_status build_status;
+    build_check;
+  t.build_check_digest <- Some digest;
+  t.build_check <- Result.value ~default:t.build_check build_check;
   Logs.info (fun m ->
-      m "Opam check: Loaded %d build results"
-        (String.Map.cardinal t.build_status));
+      m "Build check: Loaded %d build results"
+        (String.Map.cardinal t.build_check));
   Lwt.return true
 
 let http_get url =
@@ -185,22 +185,23 @@ let ( let>& ) opt some = Option.fold ~none:(Lwt.return false) ~some opt
 let maybe_update_repo state =
   let open Lwt.Syntax in
   let* commit = Opam_repository.(if exists () then pull else clone) () in
+  Logs.info (fun m -> m "Opam repo: Commit %s" commit);
   let>& commit = Option.update_with commit state.opam_repository_commit in
   update_repo commit state
 
-let maybe_update_build_status state =
+let maybe_update_build_check state =
   let open Lwt.Syntax in
-  let* data = http_get Config.build_status_url in
+  let* data = http_get Config.build_check_url in
   let>& data = Result.to_option data in
   let digest = data |> String.to_bytes |> Digest.bytes in
-  Logs.info (fun m -> m "Opam check: digest %s" (digest |> Digest.to_hex));
-  let>& digest = Option.update_with digest state.build_status_digest in
-  update_build_status (data, digest) state
+  Logs.info (fun m -> m "Build check: Digest %s" (digest |> Digest.to_hex));
+  let>& digest = Option.update_with digest state.build_check_digest in
+  update_build_check (data, digest) state
 
 let threads state =
   let open Lwt.Syntax in
   let* repo, check =
-    Lwt.both (maybe_update_repo state) (maybe_update_build_status state)
+    Lwt.both (maybe_update_repo state) (maybe_update_build_check state)
   in
   if repo || check then save_state state;
   Lwt.return ()
@@ -638,5 +639,5 @@ module Build = struct
     let name = Name.to_string package.name in
     let version = Version.to_string package.version in
     let release = name ^ "." ^ version in
-    String.Map.find_opt release t.build_status |> Option.value ~default:[]
+    String.Map.find_opt release t.build_check |> Option.value ~default:[]
 end
