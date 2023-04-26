@@ -82,7 +82,9 @@ let try_load_state () =
         let v = (Marshal.from_channel channel : state) in
         if Info.version <> v.version then raise Invalid_version;
         Logs.info (fun f ->
-            f "Package state loaded (%d packages, opam commit %s, %d package build results)"
+            f
+              "Package state loaded (%d packages, opam commit %s, %d package \
+               build results)"
               (Name.Map.cardinal v.packages)
               (Option.value ~default:"" v.opam_repository_commit)
               (String.Map.cardinal v.build_status));
@@ -200,7 +202,7 @@ let threads state =
   let* repo, check =
     Lwt.both (maybe_update_repo state) (maybe_update_build_status state)
   in
-  if repo || check then (save_state state);
+  if repo || check then save_state state;
   Lwt.return ()
 
 let rec poll_for_opam_packages ~polling v =
