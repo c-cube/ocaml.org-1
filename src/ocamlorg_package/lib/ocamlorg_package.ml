@@ -82,9 +82,10 @@ let try_load_state () =
         let v = (Marshal.from_channel channel : state) in
         if Info.version <> v.version then raise Invalid_version;
         Logs.info (fun f ->
-            f "Package state loaded (%d packages, opam commit %s)"
+            f "Package state loaded (%d packages, opam commit %s, %d package build results)"
               (Name.Map.cardinal v.packages)
-              (Option.value ~default:"" v.opam_repository_commit));
+              (Option.value ~default:"" v.opam_repository_commit)
+              (String.Map.cardinal v.build_status));
         v)
       ~finally:(fun () -> close_in channel)
   with Failure _ | Sys_error _ | Invalid_version | End_of_file ->
@@ -140,11 +141,10 @@ let update_repo commit t =
   t.featured <- Some featured;
   Logs.info (fun m ->
       m "Opam repo: Loaded %d packages" (Name.Map.cardinal packages));
-  ()
-
+  true
 
 let update_build_status (data, digest) t =
-  Logs.info (fun m -> m "Opam build status: Update");
+  Logs.info (fun m -> m "Opam check: Update");
   let json = Yojson.Safe.from_string data in
   let build_status = Build.Json.of_string json in
   Result.iter_error
@@ -153,9 +153,9 @@ let update_build_status (data, digest) t =
   t.build_status_digest <- Some digest;
   t.build_status <- Result.value ~default:t.build_status build_status;
   Logs.info (fun m ->
-      m "Opam build status: Loaded %d build results"
+      m "Opam check: Loaded %d build results"
         (String.Map.cardinal t.build_status));
-  Lwt.return ()
+  Lwt.return true
 
 let http_get url =
   let open Lwt.Syntax in
@@ -178,7 +178,7 @@ let http_get url =
       let+ () = Cohttp_lwt.Body.drain_body body in
       Error (`Msg "Failed to fetch the documentation page")
 
-let ( let>& ) opt some = Option.fold ~none:(Lwt.return ()) ~some opt
+let ( let>& ) opt some = Option.fold ~none:(Lwt.return false) ~some opt
 
 let maybe_update_repo state =
   let open Lwt.Syntax in
@@ -191,15 +191,17 @@ let maybe_update_build_status state =
   let* data = http_get Config.build_status_url in
   let>& data = Result.to_option data in
   let digest = data |> String.to_bytes |> Digest.bytes in
+  Logs.info (fun m -> m "Opam check: digest %s" (digest |> Digest.to_hex));
   let>& digest = Option.update_with digest state.build_status_digest in
   update_build_status (data, digest) state
 
 let threads state =
   let open Lwt.Syntax in
-  let* (), () =
+  let* repo, check =
     Lwt.both (maybe_update_repo state) (maybe_update_build_status state)
   in
-  Lwt.return (save_state state)
+  if repo || check then (save_state state);
+  Lwt.return ()
 
 let rec poll_for_opam_packages ~polling v =
   let open Lwt.Syntax in
