@@ -160,6 +160,7 @@ let render
 ~(deps_and_conflicts: dependencies_and_conflicts list)
 ~build_check
 (package : Package.package) =
+ignore build_check; (* TODO: add UI about this *)
 let render_dependency ~name ~cstr ~version =
   <li class="flex m-0 space-x-3 py-2 px-4 hover:bg-gray-100">
     <a href="<%s Url.Package.overview name ?version %>" class="text-primary-600 hover:underline">
@@ -231,12 +232,6 @@ Package_layout.render
         <div class="flex-grow"></div>
         <h2 class="font-semibold text-base text-body-400">Published:
           <span class="font-normal"><%s Utils.human_date_of_timestamp package.publication %></span>
-        </h2>
-        <div class="flex-grow"></div>
-        <h2 class="font-semibold text-base text-body-400">Freshest Build:
-          <span class="font-normal">
-              <%s build_check |> List.sort (fun x y -> compare (snd y) (snd x)) |> List.hd_opt |> Option.fold ~none:"None known" ~some:Ocamlorg_package.Build.to_string %>
-          </span>
         </h2>
       </div>
 
