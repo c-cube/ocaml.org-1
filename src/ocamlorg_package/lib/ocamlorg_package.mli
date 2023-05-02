@@ -197,5 +197,5 @@ val featured : state -> t list option
 module Build : sig
   val find : state -> t -> (string * Data.Build.Status.t) list
   (** Returns a list of compiler version and build check status pairs
-        correponding to the package release. *)
+      correponding to the package release. *)
 end
