@@ -195,12 +195,7 @@ val featured : state -> t list option
 (** A list of packages to highlight on the Packages page. *)
 
 module Build : sig
-  type ocamlorg_package := t
-  type t = Build.Status.t
-
-  val to_string : string * t -> string
-
-  val find : state -> ocamlorg_package -> (string * t) list
-  (** Returns the list of versions of the compiler known to have succesfully
-      built the package specified by name and version *)
+  val find : state -> t -> (string * Data.Build.Status.t) list
+  (** Returns a list of compiler version and build check status pairs
+        correponding to the package release. *)
 end

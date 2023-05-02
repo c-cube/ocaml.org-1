@@ -18,7 +18,7 @@ type state = {
   mutable stats : Statistics.t option;
   mutable featured : t list option;
   mutable build_check_digest : Digest.t option;
-  mutable build_check : (string * Build.Status.t) list String.Map.t;
+  mutable build_check : (string * Data.Build.Status.t) list String.Map.t;
 }
 
 let mockup_state (pkgs : t list) =
@@ -148,7 +148,7 @@ let update_repo commit t =
 let update_build_check (data, digest) t =
   Logs.info (fun m -> m "Build check: Update");
   let json = Yojson.Safe.from_string data in
-  let build_check = Build.Json.of_string json in
+  let build_check = Check.Json.of_string json in
   Result.iter_error
     (fun (`Msg error) -> Logs.err (fun m -> m "%s" error))
     build_check;
@@ -631,10 +631,6 @@ let search ?(sort_by_popularity = false) t query =
   |> List.sort (compare request)
 
 module Build = struct
-  type t = Build.Status.t
-
-  let to_string = Build.to_string
-
   let find t package =
     let name = Name.to_string package.name in
     let version = Version.to_string package.version in
