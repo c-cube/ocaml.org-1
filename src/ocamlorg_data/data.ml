@@ -1,5 +1,3 @@
-module Build = Build_check
-
 module Academic_institution = struct
   include Academic_institution
 

@@ -195,7 +195,7 @@ val featured : state -> t list option
 (** A list of packages to highlight on the Packages page. *)
 
 module Build : sig
-  val find : state -> t -> (string * Data.Build.Status.t) list
+  val find : state -> t -> (string * Ocamlorg.Type.Build.status) list
   (** Returns a list of compiler version and build check status pairs
       correponding to the package release. *)
 end

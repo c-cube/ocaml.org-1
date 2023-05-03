@@ -1,5 +1,3 @@
-module Build : module type of Build_check
-
 module Academic_institution : sig
   type location = { lat : float; long : float }
 

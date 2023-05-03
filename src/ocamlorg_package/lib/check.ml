@@ -13,7 +13,7 @@ module Json = struct
 
   let to_build = function
     | `Assoc [ ("compiler", `String version); ("status", `String status) ] ->
-        let* status = Data.Build.Status.of_string status in
+        let* status = Ocamlorg.Type.Build.status_of_string status in
         Ok (version, status)
     | json -> error "build" json
 

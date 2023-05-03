@@ -18,7 +18,7 @@ type state = {
   mutable stats : Statistics.t option;
   mutable featured : t list option;
   mutable build_check_digest : Digest.t option;
-  mutable build_check : (string * Data.Build.Status.t) list String.Map.t;
+  mutable build_check : (string * Ocamlorg.Type.Build.status) list String.Map.t;
 }
 
 let mockup_state (pkgs : t list) =
