@@ -197,5 +197,5 @@ val featured : state -> t list option
 module Build : sig
   val find : state -> t -> (string * Ocamlorg.Type.Build.status) list
   (** Returns a list of compiler version and build check status pairs
-      correponding to the package release. *)
+      corresponding to the package release. *)
 end

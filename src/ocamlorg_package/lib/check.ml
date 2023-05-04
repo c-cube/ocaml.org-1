@@ -1,6 +1,6 @@
 open Ocamlorg.Import
 
-let error kind str = Error (`Msg (Printf.sprintf "Unreconized %s: %s" kind str))
+let error kind str = Error (`Msg (Printf.sprintf "Unrecognized %s: %s" kind str))
 let ( let* ) = Result.bind
 let ( <@> ) f = Result.fold ~ok:Result.map ~error:(fun e _ -> Error e) f
 let ok_cons f x u = Ok List.cons <@> f x <@> u
@@ -9,7 +9,7 @@ module Json = struct
   let error kind json =
     Error
       (`Msg
-        (Printf.sprintf "Unreconized %s: %s" kind (Yojson.Safe.to_string json)))
+        (Printf.sprintf "Unrecognized %s: %s" kind (Yojson.Safe.to_string json)))
 
   let to_build = function
     | `Assoc [ ("compiler", `String version); ("status", `String status) ] ->

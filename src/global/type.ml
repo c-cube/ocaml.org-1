@@ -7,7 +7,7 @@ module Build = struct
     | "not-available" -> Ok Not_available
     | "partial" -> Ok Partial
     | "good" -> Ok Good
-    | str -> Error (`Msg (Printf.sprintf "Unreconized status: %s" str))
+    | str -> Error (`Msg (Printf.sprintf "Unrecognized status: %s" str))
 
   let status_to_string = function
     | Bad -> "Error"
