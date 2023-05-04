@@ -1,6 +1,8 @@
 open Ocamlorg.Import
 
-let error kind str = Error (`Msg (Printf.sprintf "Unrecognized %s: %s" kind str))
+let error kind str =
+  Error (`Msg (Printf.sprintf "Unrecognized %s: %s" kind str))
+
 let ( let* ) = Result.bind
 let ( <@> ) f = Result.fold ~ok:Result.map ~error:(fun e _ -> Error e) f
 let ok_cons f x u = Ok List.cons <@> f x <@> u
